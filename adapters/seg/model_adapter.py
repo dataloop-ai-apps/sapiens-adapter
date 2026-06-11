@@ -1,0 +1,103 @@
+import os
+import logging
+import cv2
+import torch
+import numpy as np
+import dtlpy as dl
+from PIL import Image
+from labels import SEGMENTATION_LABELS
+
+logger = logging.getLogger(__name__)
+
+class SapiensSegmentationAdapter(dl.BaseModelAdapter):
+    INPUT_HEIGHT = 1024
+    INPUT_WIDTH = 768
+    
+    # Restored: BGR Mean and Std exactly as the model expects
+    MEAN = np.array([103.53, 116.28, 123.675], dtype=np.float32)
+    STD = np.array([57.375, 57.12, 58.395], dtype=np.float32)
+
+    def load(self, local_path, **kwargs):
+        weights_filename = self.model_entity.configuration.get("weights_filename")
+        weights_path = os.path.join(local_path, weights_filename)
+        
+        if not os.path.isfile(weights_path):
+            if os.path.isfile(local_path):
+                weights_path = local_path
+            else:
+                raise FileNotFoundError(f"No weights found at: {weights_path}")
+
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model = torch.jit.load(weights_path, map_location=self.device)
+        self.model.eval()
+        logger.info(f"Loaded {weights_path} on {self.device}")
+
+    def prepare_item_func(self, item: dl.Item):
+        # Download and decode
+        buffer = item.download(save_locally=False)
+        img_pil = Image.open(buffer).convert('RGB')
+        
+        # Restored: Convert to BGR as required by Sapiens' internal preprocessor
+        img_bgr = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+        
+        # Return stateless dictionary to safely handle batching
+        return {
+            "image": img_bgr,
+            "orig_w": item.width,
+            "orig_h": item.height
+        }
+
+    def predict(self, batch, **kwargs):
+        batch_annotations = []
+
+        for entry in batch:
+            image = entry["image"]
+            orig_w = entry["orig_w"]
+            orig_h = entry["orig_h"]
+
+            # Resize to model input
+            resized = cv2.resize(
+                image, 
+                (self.INPUT_WIDTH, self.INPUT_HEIGHT), 
+                interpolation=cv2.INTER_LINEAR
+            )
+
+            # Restored: Normalize with BGR mean/std
+            img_float = (resized.astype(np.float32) - self.MEAN) / self.STD
+            tensor = torch.from_numpy(
+                np.ascontiguousarray(img_float.transpose(2, 0, 1))
+            ).unsqueeze(0).float().to(self.device)
+
+            with torch.no_grad():
+                output = self.model(tensor)
+                
+            if isinstance(output, (list, tuple)):
+                output = output[0]
+
+            segmentation = torch.argmax(output, dim=1).squeeze().cpu().numpy()
+
+            # Resize segmentation mask back to original item dimensions
+            segmentation = cv2.resize(
+                segmentation.astype(np.uint8), 
+                (orig_w, orig_h),
+                interpolation=cv2.INTER_NEAREST
+            )
+
+            # Build Dataloop annotations
+            collection = dl.AnnotationCollection()
+            for class_idx, label_name in SEGMENTATION_LABELS.items():
+                if class_idx == 0:
+                    continue  # Skip background
+                
+                mask = (segmentation == class_idx).astype(np.uint8)
+                if mask.sum() == 0:
+                    continue
+                
+                collection.add(
+                    annotation_definition=dl.Segmentation(geo=mask, label=label_name),
+                    model_info={"name": self.model_entity.name, "confidence": 1.0}
+                )
+                
+            batch_annotations.append(collection)
+
+        return batch_annotations

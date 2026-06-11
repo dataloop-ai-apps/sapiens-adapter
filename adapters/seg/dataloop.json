@@ -1,0 +1,105 @@
+{
+  "name": "sapiens_adapter",
+  "displayName": "Sapiens Adapter",
+  "version": "1.0.0",
+  "scope": "project",
+  "description": "Sapiens adapter for Dataloop",
+  "components": {
+    "computeConfigs": [
+      {
+        "name": "gpu-inference",
+        "runtime": {
+          "podType": "gpu-t4",
+          "concurrency": 1,
+          "autoscaler": {
+            "type": "rabbitmq",
+            "minReplicas": 0,
+            "maxReplicas": 1,
+            "queueLength": 8
+          }
+        }
+      }
+    ],
+    "modules": [
+      {
+        "name": "sapiens_adapter_module",
+        "entryPoint": "model_adapter.py",
+        "className": "SapiensSegmentationAdapter",
+        "computeConfig": "gpu-inference",
+        "initInputs": [
+          {
+            "name": "model_entity",
+            "type": "Model"
+          }
+        ],
+        "functions": [
+            {
+                "name": "predict_items",
+                "input": [
+                    {
+                        "type": "Item[]",
+                        "name": "items"
+                    }
+                ],
+                "output": [
+                    {
+                        "type": "Item[]",
+                        "name": "items"
+                    }
+                ]
+            }
+        ]
+      }
+    ],
+    "models": [
+      {
+        "name": "sapiens_adapter_model",
+        "moduleName": "sapiens_adapter_module",
+        "configuration": {
+          "weights_filename": "sapiens_0.3b_goliath_best_goliath_mIoU_7673_epoch_194_torchscript.pt2",
+          "input_height": 1024,
+          "input_width": 1024,
+          "batch_size": 1,
+          "person_label": "person",
+          "device": "cuda"
+        },
+        "artifacts": [
+          {
+            "type": "link",
+            "url": "https://huggingface.co/facebook/sapiens-seg-0.3b-torchscript/resolve/main/sapiens_0.3b_goliath_best_goliath_mIoU_7673_epoch_194_torchscript.pt2"
+          }
+        ],
+        "labels": [
+          "background",
+          "apparel",
+          "face_neck",
+          "hair",
+          "left_foot",
+          "left_hand",
+          "left_lower_arm",
+          "left_lower_leg",
+          "left_shoe",
+          "left_sock",
+          "left_upper_arm",
+          "left_upper_leg",
+          "lower_clothing",
+          "right_foot",
+          "right_hand",
+          "right_lower_arm",
+          "right_lower_leg",
+          "right_shoe",
+          "right_sock",
+          "right_upper_arm",
+          "right_upper_leg",
+          "torso",
+          "upper_clothing",
+          "lower_lip",
+          "upper_lip",
+          "lower_teeth",
+          "upper_teeth",
+          "tongue"
+        ]
+      }
+    ]
+  }
+}
