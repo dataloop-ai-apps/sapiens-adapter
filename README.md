@@ -34,4 +34,4 @@ To use this adapter, make sure you have a project and a dataset in your Dataloop
 ```bash
 # Build the Docker image
 podman build -t sapiens-adapter:0.0.7 .
-``
+```
