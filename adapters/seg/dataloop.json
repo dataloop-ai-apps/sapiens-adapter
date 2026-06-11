@@ -11,6 +11,7 @@
         "runtime": {
           "podType": "gpu-t4",
           "concurrency": 1,
+          "runnerImage": "gcr.io/viewo-g/piper/agent/runner/apps/sapiens-adapter:0.0.1",
           "autoscaler": {
             "type": "rabbitmq",
             "minReplicas": 0,
