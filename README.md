@@ -54,12 +54,10 @@ The adapter is configured via the `dataloop.json` manifest file:
 
 ### Model Configuration
 
-- **weights_filename:** `sapiens_0.3b_goliath_best_goliath_mIoU_7673_epoch_194_torchscript.pt2`
+pt2`
 - **input_height:** 1024
 - **input_width:** 768
 - **batch_size:** 1
-- **device:** cuda
-- **person_label:** person
 
 ### Compute Configuration
 

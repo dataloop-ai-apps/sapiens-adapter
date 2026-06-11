@@ -50,6 +50,8 @@ class SapiensSegmentationAdapter(dl.BaseModelAdapter):
     def load(self, local_path, **kwargs):
         weights_filename = self.model_entity.configuration.get("weights_filename")
         weights_path = os.path.join(local_path, weights_filename)
+        self.input_height = self.model_entity.configuration.get("input_height", self.INPUT_HEIGHT)
+        self.input_width = self.model_entity.configuration.get("input_width", self.INPUT_WIDTH)
         
         if not os.path.isfile(weights_path):
             if os.path.isfile(local_path):
@@ -88,7 +90,7 @@ class SapiensSegmentationAdapter(dl.BaseModelAdapter):
             # Resize to model input
             resized = cv2.resize(
                 image, 
-                (self.INPUT_WIDTH, self.INPUT_HEIGHT), 
+                (self.input_width, self.input_height), 
                 interpolation=cv2.INTER_LINEAR
             )
 
