@@ -5,9 +5,39 @@ import torch
 import numpy as np
 import dtlpy as dl
 from PIL import Image
-from labels import SEGMENTATION_LABELS
 
 logger = logging.getLogger(__name__)
+
+SEGMENTATION_LABELS = {
+    0: "background",
+    1: "apparel",
+    2: "face_neck",
+    3: "hair",
+    4: "left_foot",
+    5: "left_hand",
+    6: "left_lower_arm",
+    7: "left_lower_leg",
+    8: "left_shoe",
+    9: "left_sock",
+    10: "left_upper_arm",
+    11: "left_upper_leg",
+    12: "lower_clothing",
+    13: "right_foot",
+    14: "right_hand",
+    15: "right_lower_arm",
+    16: "right_lower_leg",
+    17: "right_shoe",
+    18: "right_sock",
+    19: "right_upper_arm",
+    20: "right_upper_leg",
+    21: "torso",
+    22: "upper_clothing",
+    23: "lower_lip",
+    24: "upper_lip",
+    25: "lower_teeth",
+    26: "upper_teeth",
+    27: "tongue"
+}
 
 class SapiensSegmentationAdapter(dl.BaseModelAdapter):
     INPUT_HEIGHT = 1024
