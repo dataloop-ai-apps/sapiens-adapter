@@ -1,7 +1,7 @@
 {
   "name": "sapiens_adapter",
   "displayName": "Sapiens Adapter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scope": "project",
   "description": "Sapiens adapter for Dataloop",
   "components": {
