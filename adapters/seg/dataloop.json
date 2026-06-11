@@ -24,7 +24,7 @@
     "modules": [
       {
         "name": "sapiens_adapter_module",
-        "entryPoint": "model_adapter.py",
+        "entryPoint": "adapters/seg/model_adapter.py",
         "className": "SapiensSegmentationAdapter",
         "computeConfig": "gpu-inference",
         "initInputs": [
