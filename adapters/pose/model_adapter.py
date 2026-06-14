@@ -49,71 +49,95 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
             "orig_h": item.height
         }
 
-    def predict(self, batch, **kwargs):
-        mean = np.array([103.53, 116.28, 123.675], dtype=np.float32)
-        std = np.array([57.375, 57.12, 58.395], dtype=np.float32)
-        input_height = self.model_entity.configuration.get("input_height", 1024)
-        input_width = self.model_entity.configuration.get("input_width", 768)
+    
+def predict(self, batch, **kwargs):
+    mean = np.array([103.53, 116.28, 123.675], dtype=np.float32)
+    std = np.array([57.375, 57.12, 58.395], dtype=np.float32)
+    input_height = self.model_entity.configuration.get("input_height", 1024)
+    input_width = self.model_entity.configuration.get("input_width", 768)
 
-        batch_annotations = []
+    # From vis_pose.py (COCO format)
+    KEYPOINT_NAMES = [
+        "nose",
+        "left_eye", "right_eye",
+        "left_ear", "right_ear",
+        "left_shoulder", "right_shoulder",
+        "left_elbow", "right_elbow",
+        "left_wrist", "right_wrist",
+        "left_hip", "right_hip",
+        "left_knee", "right_knee",
+        "left_ankle", "right_ankle"
+    ]
 
-        for entry in batch:
-            image = entry["image"]
-            orig_w = entry["orig_w"]
-            orig_h = entry["orig_h"]
+    batch_annotations = []
 
-            # Resize
-            resized = cv2.resize(
-                image,
-                (input_width, input_height),
-                interpolation=cv2.INTER_LINEAR
+    for entry in batch:
+        image = entry["image"]
+        orig_w = entry["orig_w"]
+        orig_h = entry["orig_h"]
+
+        # --- preprocessing ---
+        resized = cv2.resize(
+            image,
+            (input_width, input_height),
+            interpolation=cv2.INTER_LINEAR
+        )
+
+        img_float = (resized.astype(np.float32) - mean) / std
+
+        tensor = torch.from_numpy(
+            np.ascontiguousarray(img_float.transpose(2, 0, 1))
+        ).unsqueeze(0).float().to(self.device)
+
+        # --- inference ---
+        with torch.no_grad():
+            output = self.model(tensor)
+
+        if isinstance(output, (list, tuple)):
+            output = output[0]
+
+        # --- pose extraction ---
+        heatmaps = output.squeeze().cpu().numpy()  # [K, H, W]
+
+        keypoints_dict = {}
+
+        for i, name in enumerate(KEYPOINT_NAMES):
+            heatmap = heatmaps[i]
+
+            # find max location (same as vis_pose.py idea)
+            y, x = np.unravel_index(np.argmax(heatmap), heatmap.shape)
+
+            confidence = float(heatmap[y, x])
+
+            # optional threshold (important in real usage)
+            if confidence < 0.1:
+                continue
+
+            # scale back to original image
+            x = int(x * orig_w / input_width)
+            y = int(y * orig_h / input_height)
+
+            keypoints_dict[name] = {
+                "x": x,
+                "y": y,
+                "confidence": confidence
+            }
+
+        # --- build Dataloop Pose ---
+        collection = dl.AnnotationCollection()
+
+        if len(keypoints_dict) > 0:
+            collection.add(
+                annotation_definition=dl.Pose(
+                    keypoints=keypoints_dict,
+                    label="person"
+                ),
+                model_info={
+                    "name": self.model_entity.name,
+                    "confidence": 1.0
+                }
             )
 
-            # Normalize
-            img_float = (resized.astype(np.float32) - mean) / std
-            tensor = torch.from_numpy(
-                np.ascontiguousarray(img_float.transpose(2, 0, 1))
-            ).unsqueeze(0).float().to(self.device)
+        batch_annotations.append(collection)
 
-            # Inference
-            with torch.no_grad():
-                output = self.model(tensor)
-
-            if isinstance(output, (list, tuple)):
-                output = output[0]
-
-            # ---- POSE LOGIC STARTS HERE ----
-
-            heatmaps = output.squeeze().cpu().numpy()  # [K, H, W]
-            num_keypoints = heatmaps.shape[0]
-
-            keypoints = []
-
-            for i in range(num_keypoints):
-                heatmap = heatmaps[i]
-
-                # Find peak (argmax over H,W)
-                y, x = np.unravel_index(np.argmax(heatmap), heatmap.shape)
-
-                # Scale back to original image size
-                x = int(x * orig_w / input_width)
-                y = int(y * orig_h / input_height)
-
-                keypoints.append({"x": x, "y": y, "id": i})
-
-            # ---- BUILD DATALOOP ANNOTATION ----
-
-            collection = dl.AnnotationCollection()
-
-            if len(keypoints) > 0:
-                collection.add(
-                    annotation_definition=dl.Points(
-                        points=[(kp["x"], kp["y"]) for kp in keypoints],
-                        label="person"  # or your configured label
-                    ),
-                    model_info={"name": self.model_entity.name, "confidence": 1.0}
-                )
-
-            batch_annotations.append(collection)
-
-        return batch_annotations
+    return batch_annotations
