@@ -1,13 +1,13 @@
 {
-  "name": "sapiens_adapter",
+  "name": "sapiens-adapter",
   "displayName": "Sapiens Adapter",
-  "version": "0.0.7",
+  "version": "0.0.9",
   "scope": "project",
   "description": "Sapiens adapter for Dataloop",
   "codebase": {
     "type": "git",
     "gitUrl": "https://github.com/dataloop-ai-apps/sapiens-adapter.git",
-    "gitTag": "0.0.7"
+    "gitTag": "0.0.9"
   },
   "components": {
     "computeConfigs": [
@@ -20,7 +20,7 @@
           "autoscaler": {
             "type": "rabbitmq",
             "minReplicas": 0,
-            "maxReplicas": 1,
+            "maxReplicas": 2,
             "queueLength": 8
           }
         }
@@ -28,8 +28,8 @@
     ],
     "modules": [
       {
-        "name": "sapiens_adapter_module",
-        "entryPoint": "adapters/seg/model_adapter.py",
+        "name": "sapiens-adapter-module",
+        "entryPoint": "adapters/segmentation/model_adapter.py",
         "className": "SapiensSegmentationAdapter",
         "computeConfig": "gpu-inference",
         "initInputs": [
@@ -59,9 +59,9 @@
     ],
     "models": [
       {
-        "name": "sapiens_adapter_model_0.3b",
-        "moduleName": "sapiens_adapter_module",
-        "status": "trained",
+        "name": "sapiens-adapter-model-0.3b",
+        "moduleName": "sapiens-adapter-module",
+        "status": "pre-trained",
         "configuration": {
           "weights_filename": "sapiens_0.3b_goliath_best_goliath_mIoU_7673_epoch_194_torchscript.pt2",
           "input_height": 1024,
@@ -106,9 +106,9 @@
         ]
       },
       {
-        "name": "sapiens_adapter_model_0.6b",
-        "moduleName": "sapiens_adapter_module",
-        "status": "trained",
+        "name": "sapiens-adapter-model-0.6b",
+        "moduleName": "sapiens-adapter-module",
+        "status": "pre-trained",
         "configuration": {
           "weights_filename": "sapiens_0.6b_goliath_best_goliath_mIoU_7777_epoch_178_torchscript.pt2",
           "input_height": 1024,
@@ -153,9 +153,9 @@
         ]
       },
       {
-        "name": "sapiens_adapter_model_1b",
-        "moduleName": "sapiens_adapter_module",
-        "status": "trained",
+        "name": "sapiens-adapter-model-1b",
+        "moduleName": "sapiens-adapter-module",
+        "status": "pre-trained",
         "configuration": {
           "weights_filename": "sapiens_1b_goliath_best_goliath_mIoU_7994_epoch_151_torchscript.pt2",
           "input_height": 1024,
