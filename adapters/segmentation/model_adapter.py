@@ -119,25 +119,3 @@ class SapiensSegmentationAdapter(dl.BaseModelAdapter):
             batch_annotations.append(collection)
 
         return batch_annotations
-if __name__ == "__main__":
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s | %(levelname)-7s | %(name)s | %(message)s",
-    )
-
-    project = dl.projects.get(project_name="menachem-onboarding")
-    model = project.models.get(model_name="sapiens1-adapter-test-model")
-
-    adapter = SapiensSegmentationAdapter(model_entity=model)
-
-    dataset = project.datasets.get(dataset_name="elements")
-
-    for filepath in ["/sample-person.jpg"]:
-        try:
-            item = dataset.items.get(filepath=filepath)
-            logger.info(f"\n{'=' * 60}\nTesting: {filepath}\n{'=' * 60}")
-            adapter.predict_items([item], upload=True)
-        except Exception as e:
-            logger.error(f"Failed on {filepath}: {e}")
-
-    print("Done.")
