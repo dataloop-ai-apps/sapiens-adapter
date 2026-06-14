@@ -50,94 +50,117 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
         }
 
     
-def predict(self, batch, **kwargs):
-    mean = np.array([103.53, 116.28, 123.675], dtype=np.float32)
-    std = np.array([57.375, 57.12, 58.395], dtype=np.float32)
-    input_height = self.model_entity.configuration.get("input_height", 1024)
-    input_width = self.model_entity.configuration.get("input_width", 768)
+    def predict(self, batch, **kwargs):
+        mean = np.array([103.53, 116.28, 123.675], dtype=np.float32)
+        std = np.array([57.375, 57.12, 58.395], dtype=np.float32)
+        input_height = self.model_entity.configuration.get("input_height", 1024)
+        input_width = self.model_entity.configuration.get("input_width", 768)
 
-    # From vis_pose.py (COCO format)
-    KEYPOINT_NAMES = [
-        "nose",
-        "left_eye", "right_eye",
-        "left_ear", "right_ear",
-        "left_shoulder", "right_shoulder",
-        "left_elbow", "right_elbow",
-        "left_wrist", "right_wrist",
-        "left_hip", "right_hip",
-        "left_knee", "right_knee",
-        "left_ankle", "right_ankle"
-    ]
+        # From vis_pose.py (COCO format)
+        KEYPOINT_NAMES = [
+            "nose",
+            "left_eye", "right_eye",
+            "left_ear", "right_ear",
+            "left_shoulder", "right_shoulder",
+            "left_elbow", "right_elbow",
+            "left_wrist", "right_wrist",
+            "left_hip", "right_hip",
+            "left_knee", "right_knee",
+            "left_ankle", "right_ankle"
+        ]
 
-    batch_annotations = []
+        batch_annotations = []
 
-    for entry in batch:
-        image = entry["image"]
-        orig_w = entry["orig_w"]
-        orig_h = entry["orig_h"]
+        for entry in batch:
+            image = entry["image"]
+            orig_w = entry["orig_w"]
+            orig_h = entry["orig_h"]
 
-        # --- preprocessing ---
-        resized = cv2.resize(
-            image,
-            (input_width, input_height),
-            interpolation=cv2.INTER_LINEAR
-        )
-
-        img_float = (resized.astype(np.float32) - mean) / std
-
-        tensor = torch.from_numpy(
-            np.ascontiguousarray(img_float.transpose(2, 0, 1))
-        ).unsqueeze(0).float().to(self.device)
-
-        # --- inference ---
-        with torch.no_grad():
-            output = self.model(tensor)
-
-        if isinstance(output, (list, tuple)):
-            output = output[0]
-
-        # --- pose extraction ---
-        heatmaps = output.squeeze().cpu().numpy()  # [K, H, W]
-
-        keypoints_dict = {}
-
-        for i, name in enumerate(KEYPOINT_NAMES):
-            heatmap = heatmaps[i]
-
-            # find max location (same as vis_pose.py idea)
-            y, x = np.unravel_index(np.argmax(heatmap), heatmap.shape)
-
-            confidence = float(heatmap[y, x])
-
-            # optional threshold (important in real usage)
-            if confidence < 0.1:
-                continue
-
-            # scale back to original image
-            x = int(x * orig_w / input_width)
-            y = int(y * orig_h / input_height)
-
-            keypoints_dict[name] = {
-                "x": x,
-                "y": y,
-                "confidence": confidence
-            }
-
-        # --- build Dataloop Pose ---
-        collection = dl.AnnotationCollection()
-
-        if len(keypoints_dict) > 0:
-            collection.add(
-                annotation_definition=dl.Pose(
-                    keypoints=keypoints_dict,
-                    label="person"
-                ),
-                model_info={
-                    "name": self.model_entity.name,
-                    "confidence": 1.0
-                }
+            # --- preprocessing ---
+            resized = cv2.resize(
+                image,
+                (input_width, input_height),
+                interpolation=cv2.INTER_LINEAR
             )
 
-        batch_annotations.append(collection)
+            img_float = (resized.astype(np.float32) - mean) / std
 
-    return batch_annotations
+            tensor = torch.from_numpy(
+                np.ascontiguousarray(img_float.transpose(2, 0, 1))
+            ).unsqueeze(0).float().to(self.device)
+
+            # --- inference ---
+            with torch.no_grad():
+                output = self.model(tensor)
+
+            if isinstance(output, (list, tuple)):
+                output = output[0]
+
+            # --- pose extraction ---
+            heatmaps = output.squeeze().cpu().numpy()  # [K, H, W]
+
+            keypoints_dict = {}
+
+            for i, name in enumerate(KEYPOINT_NAMES):
+                heatmap = heatmaps[i]
+
+                # find max location (same as vis_pose.py idea)
+                y, x = np.unravel_index(np.argmax(heatmap), heatmap.shape)
+
+                confidence = float(heatmap[y, x])
+
+                # optional threshold (important in real usage)
+                if confidence < 0.1:
+                    continue
+
+                # scale back to original image
+                x = int(x * orig_w / input_width)
+                y = int(y * orig_h / input_height)
+
+                keypoints_dict[name] = {
+                    "x": x,
+                    "y": y,
+                    "confidence": confidence
+                }
+
+            # --- build Dataloop Pose ---
+            collection = dl.AnnotationCollection()
+
+            if len(keypoints_dict) > 0:
+                collection.add(
+                    annotation_definition=dl.Pose(
+                        keypoints=keypoints_dict,
+                        label="person"
+                    ),
+                    model_info={
+                        "name": self.model_entity.name,
+                        "confidence": 1.0
+                    }
+                )
+
+            batch_annotations.append(collection)
+
+        return batch_annotations
+
+if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s | %(levelname)-7s | %(name)s | %(message)s",
+    )
+
+    project = dl.projects.get(project_name="menachem-onboarding")
+    model = project.models.get(model_name="sapiens-pose-adapter-model-0.3b")
+
+    adapter = SapiensPoseAdapter(model_entity=model)
+
+    dataset = project.datasets.get(dataset_name="elements")
+
+    for filepath in ["/sample-person_2.jpg"]:
+        try:
+            item = dataset.items.get(filepath=filepath)
+            logger.info(f"\n{'=' * 60}\nTesting: {filepath}\n{'=' * 60}")
+            adapter.predict_items([item], upload=True)
+        except Exception as e:
+            logger.error(f"Failed on {filepath}: {e}")
+
+    print("Done.")
