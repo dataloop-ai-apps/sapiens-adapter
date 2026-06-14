@@ -49,9 +49,16 @@ class SapiensSegmentationAdapter(dl.BaseModelAdapter):
 
     def load(self, local_path, **kwargs):
         weights_filename = self.model_entity.configuration.get("weights_filename")
+        if not weights_filename:
+            raise ValueError("weights_filename not found in model configuration")
+        
         weights_path = os.path.join(local_path, weights_filename)
         self.input_height = self.model_entity.configuration.get("input_height", self.INPUT_HEIGHT)
         self.input_width = self.model_entity.configuration.get("input_width", self.INPUT_WIDTH)
+        
+        # Validate input dimensions
+        if self.input_height <= 0 or self.input_width <= 0:
+            raise ValueError(f"Invalid input dimensions: {self.input_height}x{self.input_width}")
         
         if not os.path.isfile(weights_path):
             if os.path.isfile(local_path):
@@ -65,6 +72,10 @@ class SapiensSegmentationAdapter(dl.BaseModelAdapter):
         logger.info(f"Loaded {weights_path} on {self.device}")
 
     def prepare_item_func(self, item: dl.Item):
+        # Validate item dimensions
+        if not item.width or not item.height:
+            raise ValueError(f"Item has invalid dimensions: {item.width}x{item.height}")
+        
         # Download and decode
         buffer = item.download(save_locally=False)
         img_pil = Image.open(buffer).convert('RGB')
@@ -80,12 +91,23 @@ class SapiensSegmentationAdapter(dl.BaseModelAdapter):
         }
 
     def predict(self, batch, **kwargs):
+        if not batch:
+            return []
+        
         batch_annotations = []
 
         for entry in batch:
+            # Validate batch entry
+            if not isinstance(entry, dict) or "image" not in entry:
+                raise ValueError("Invalid batch entry: missing 'image' key")
+            
             image = entry["image"]
             orig_w = entry["orig_w"]
             orig_h = entry["orig_h"]
+
+            # Validate image
+            if image is None or image.size == 0:
+                raise ValueError("Invalid image: empty or None")
 
             # Resize to model input
             resized = cv2.resize(
