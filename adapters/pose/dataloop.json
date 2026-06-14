@@ -1,9 +1,9 @@
 {
-  "name": "sapiens-segmentation-adapter",
-  "displayName": "Sapiens Segmentation Adapter",
+  "name": "sapiens-pose-adapter",
+  "displayName": "Sapiens Pose Adapter",
   "version": "0.0.12",
   "scope": "public",
-  "description": "Sapiens segmentation adapter for Dataloop",
+  "description": "Sapiens pose adapter for Dataloop",
   "codebase": {
     "type": "git",
     "gitUrl": "https://github.com/dataloop-ai-apps/sapiens-adapter.git",
@@ -28,9 +28,9 @@
     ],
     "modules": [
       {
-        "name": "sapiens-segmentation-adapter-module",
-        "entryPoint": "adapters/segmentation/model_adapter.py",
-        "className": "SapiensSegmentationAdapter",
+        "name": "sapiens-pose-adapter-module",
+        "entryPoint": "adapters/pose/model_adapter.py",
+        "className": "SapiensPoseAdapter",
         "computeConfig": "cpu-inference",
         "initInputs": [
           {
@@ -59,11 +59,11 @@
     ],
     "models": [
       {
-        "name": "sapiens-segmentation-adapter-model-0.3b",
-        "moduleName": "sapiens-segmentation-adapter-module",
+        "name": "sapiens-pose-adapter-model-0.3b",
+        "moduleName": "sapiens-pose-adapter-module",
         "status": "pre-trained",
         "configuration": {
-          "weights_filename": "sapiens_0.3b_goliath_best_goliath_mIoU_7673_epoch_194_torchscript.pt2",
+          "weights_filename": "sapiens_0.3b_goliath_best_goliath_AP_573_torchscript.pt2",
           "input_height": 1024,
           "input_width": 768,
           "batch_size": 1
@@ -71,7 +71,7 @@
         "artifacts": [
           {
             "type": "link",
-            "url": "https://huggingface.co/facebook/sapiens-seg-0.3b-torchscript/resolve/main/sapiens_0.3b_goliath_best_goliath_mIoU_7673_epoch_194_torchscript.pt2"
+            "url": "https://huggingface.co/facebook/sapiens-pose-0.3b-torchscript/resolve/main/sapiens_0.3b_goliath_best_goliath_AP_573_torchscript.pt2"
           }
         ],
         "labels": [
@@ -106,11 +106,11 @@
         ]
       },
       {
-        "name": "sapiens-segmentation-adapter-model-0.6b",
-        "moduleName": "sapiens-segmentation-adapter-module",
+        "name": "sapiens-pose-adapter-model-0.6b",
+        "moduleName": "sapiens-pose-adapter-module",
         "status": "pre-trained",
         "configuration": {
-          "weights_filename": "sapiens_0.6b_goliath_best_goliath_mIoU_7777_epoch_178_torchscript.pt2",
+          "weights_filename": "sapiens_0.6b_goliath_best_goliath_AP_609_torchscript.pt2",
           "input_height": 1024,
           "input_width": 768,
           "batch_size": 1
@@ -118,54 +118,7 @@
         "artifacts": [
           {
             "type": "link",
-            "url": "https://huggingface.co/facebook/sapiens-seg-0.6b-torchscript/resolve/main/sapiens_0.6b_goliath_best_goliath_mIoU_7777_epoch_178_torchscript.pt2"
-          }
-        ],
-        "labels": [
-          "background",
-          "apparel",
-          "face_neck",
-          "hair",
-          "left_foot",
-          "left_hand",
-          "left_lower_arm",
-          "left_lower_leg",
-          "left_shoe",
-          "left_sock",
-          "left_upper_arm",
-          "left_upper_leg",
-          "lower_clothing",
-          "right_foot",
-          "right_hand",
-          "right_lower_arm",
-          "right_lower_leg",
-          "right_shoe",
-          "right_sock",
-          "right_upper_arm",
-          "right_upper_leg",
-          "torso",
-          "upper_clothing",
-          "lower_lip",
-          "upper_lip",
-          "lower_teeth",
-          "upper_teeth",
-          "tongue"
-        ]
-      },
-      {
-        "name": "sapiens-segmentation-adapter-model-1b",
-        "moduleName": "sapiens-segmentation-adapter-module",
-        "status": "pre-trained",
-        "configuration": {
-          "weights_filename": "sapiens_1b_goliath_best_goliath_mIoU_7994_epoch_151_torchscript.pt2",
-          "input_height": 1024,
-          "input_width": 768,
-          "batch_size": 1
-        },
-        "artifacts": [
-          {
-            "type": "link",
-            "url": "https://huggingface.co/facebook/sapiens-seg-1b-torchscript/resolve/main/sapiens_1b_goliath_best_goliath_mIoU_7994_epoch_151_torchscript.pt2"
+            "url": "https://huggingface.co/facebook/sapiens-pose-0.6b-torchscript/resolve/main/sapiens_0.6b_goliath_best_goliath_AP_609_torchscript.pt2"
           }
         ],
         "labels": [
