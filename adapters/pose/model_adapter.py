@@ -129,7 +129,7 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
             if len(keypoints_dict) > 0:
                 collection.add(
                     annotation_definition=dl.Pose(
-                        keypoints=keypoints_dict,
+                        points=keypoints_dict,
                         label="person"
                     ),
                     model_info={
