@@ -1,13 +1,13 @@
 {
-  "name": "sapiens-adapter",
-  "displayName": "Sapiens Adapter",
-  "version": "0.0.9",
-  "scope": "project",
-  "description": "Sapiens adapter for Dataloop",
+  "name": "sapiens-segmentation-adapter",
+  "displayName": "Sapiens Segmentation Adapter",
+  "version": "0.0.10",
+  "scope": "public",
+  "description": "Sapiens segmentation adapter for Dataloop",
   "codebase": {
     "type": "git",
     "gitUrl": "https://github.com/dataloop-ai-apps/sapiens-adapter.git",
-    "gitTag": "0.0.9"
+    "gitTag": "0.0.10"
   },
   "components": {
     "computeConfigs": [
@@ -28,7 +28,7 @@
     ],
     "modules": [
       {
-        "name": "sapiens-adapter-module",
+        "name": "sapiens-segmentation-adapter-module",
         "entryPoint": "adapters/segmentation/model_adapter.py",
         "className": "SapiensSegmentationAdapter",
         "computeConfig": "gpu-inference",
@@ -59,8 +59,8 @@
     ],
     "models": [
       {
-        "name": "sapiens-adapter-model-0.3b",
-        "moduleName": "sapiens-adapter-module",
+        "name": "sapiens-segmentation-adapter-model-0.3b",
+        "moduleName": "sapiens-segmentation-adapter-module",
         "status": "pre-trained",
         "configuration": {
           "weights_filename": "sapiens_0.3b_goliath_best_goliath_mIoU_7673_epoch_194_torchscript.pt2",
@@ -106,8 +106,8 @@
         ]
       },
       {
-        "name": "sapiens-adapter-model-0.6b",
-        "moduleName": "sapiens-adapter-module",
+        "name": "sapiens-segmentation-adapter-model-0.6b",
+        "moduleName": "sapiens-segmentation-adapter-module",
         "status": "pre-trained",
         "configuration": {
           "weights_filename": "sapiens_0.6b_goliath_best_goliath_mIoU_7777_epoch_178_torchscript.pt2",
@@ -153,8 +153,8 @@
         ]
       },
       {
-        "name": "sapiens-adapter-model-1b",
-        "moduleName": "sapiens-adapter-module",
+        "name": "sapiens-segmentation-adapter-model-1b",
+        "moduleName": "sapiens-segmentation-adapter-module",
         "status": "pre-trained",
         "configuration": {
           "weights_filename": "sapiens_1b_goliath_best_goliath_mIoU_7994_epoch_151_torchscript.pt2",
