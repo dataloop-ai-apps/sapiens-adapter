@@ -46,31 +46,39 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
         return {
             "image": img_bgr,
             "orig_w": item.width,
-            "orig_h": item.height
+            "orig_h": item.height,
+            "item": item
         }
 
     
     def predict(self, batch, **kwargs):
         import time
 
+        if not batch:
+            return []
+
         mean = np.array([103.53, 116.28, 123.675], dtype=np.float32)
         std = np.array([57.375, 57.12, 58.395], dtype=np.float32)
+
         input_height = self.model_entity.configuration.get("input_height", 1024)
         input_width = self.model_entity.configuration.get("input_width", 768)
 
-        KEYPOINT_NAMES = [
-            "nose",
-            "left_eye", "right_eye",
-            "left_ear", "right_ear",
-            "left_shoulder", "right_shoulder",
-            "left_elbow", "right_elbow",
-            "left_wrist", "right_wrist",
-            "left_hip", "right_hip",
-            "left_knee", "right_knee",
-            "left_ankle", "right_ankle"
-        ]
+        recipe_id = self.model_entity.configuration.get("recipe_id")
+        template_name = self.model_entity.configuration.get("template_name")
+        keypoints = self.model_entity.labels or []
 
-        TEMPLATE_ID = "b57dc98e-3d94-4c0d-b1a0-6057f06beb0a"
+        template_id = None
+
+        # ✅ Resolve template if exists
+        if recipe_id and template_name:
+            try:
+                dataset = batch[0]["item"].dataset
+                recipe = dataset.recipes.get(recipe_id)
+                template_id = recipe.get_annotation_template_id(template_name=template_name)
+                logger.info(f"Using template_id: {template_id}")
+            except Exception as e:
+                logger.warning(f"Template not found. Falling back to points-only. Error: {e}")
+                template_id = None
 
         batch_annotations = []
 
@@ -99,7 +107,7 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
             keypoints_dict = {}
             hm_h, hm_w = heatmaps.shape[1], heatmaps.shape[2]
 
-            for i, name in enumerate(KEYPOINT_NAMES):
+            for i, name in enumerate(keypoints):
                 heatmap = heatmaps[i]
 
                 y, x = np.unravel_index(np.argmax(heatmap), heatmap.shape)
@@ -108,78 +116,67 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
                 if confidence < 0.001:
                     continue
 
-                # scale to original image
+                # ✅ correct scaling
                 x = int(x * orig_w / hm_w)
                 y = int(y * orig_h / hm_h)
 
-
-                # ✅ clamp to image bounds
                 x = max(0, min(orig_w - 1, x))
                 y = max(0, min(orig_h - 1, y))
 
-
-                keypoints_dict[name] = (x, y)
+                keypoints_dict[name] = (x, y, confidence)
 
             # --- build annotations ---
             collection = dl.AnnotationCollection()
 
             if len(keypoints_dict) > 0:
-                # ✅ create stable parent id
-                parent_id = str(int(time.time() * 1000000))
 
-                # ✅ parent pose (NO points inside!)
-                collection.add(
-                    annotation_definition=dl.Pose(
-                        label="person",
-                        template_id=TEMPLATE_ID
-                    ),
-                    object_id=parent_id,
-                    model_info={
-                        "name": self.model_entity.name,
-                        "confidence": 1.0
-                    }
-                )
+                # ✅ CASE 1: Template exists → Pose + child Points
+                if template_id is not None:
+                    parent_id = str(int(time.time() * 1e6))
 
-                # ✅ children keypoints
-                for name, (x, y) in keypoints_dict.items():
                     collection.add(
-                        annotation_definition=dl.Point(
-                            x=x,
-                            y=y,
-                            label=name
+                        annotation_definition=dl.Pose(
+                            label="person",
+                            template_id=template_id
                         ),
-                        parent_id=parent_id
+                        object_id=parent_id,
+                        model_info={
+                            "name": self.model_entity.name,
+                            "confidence": 1.0
+                        }
                     )
 
-            # ✅ debug (optional but useful)
+                    for name, (x, y, confidence) in keypoints_dict.items():
+                        collection.add(
+                            annotation_definition=dl.Point(
+                                x=x,
+                                y=y,
+                                label=name
+                            ),
+                            parent_id=parent_id,
+                            model_info={
+                                "name": self.model_entity.name,
+                                "confidence": confidence
+                            }
+                        )
+
+                # ✅ CASE 2: No template → simple Pose(points=...)
+                else:
+                    for name, (x, y, confidence) in keypoints_dict.items():
+                        collection.add(
+                            annotation_definition=dl.Point(
+                                x=x,
+                                y=y,
+                                label=name
+                            ),
+                            model_info={
+                                "name": self.model_entity.name,
+                                "confidence": confidence
+                            }
+                        )
+
             logger.info(f"Generated {len(collection.annotations)} annotations")
 
             batch_annotations.append(collection)
 
         return batch_annotations
-
-
-if __name__ == "__main__":
-    dl.setenv('rc')
-    # dl.login()
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s | %(levelname)-7s | %(name)s | %(message)s",
-    )
-
-    project = dl.projects.get(project_name="menachem-onboarding")
-    model = project.models.get(model_name="sapiens-pose-adapter-model-0.3b")
-
-    adapter = SapiensPoseAdapter(model_entity=model)
-
-    dataset = project.datasets.get(dataset_name="new-dataset")
-
-    for filepath in ["/sample-person_2.jpg"]:
-        try:
-            item = dataset.items.get(filepath=filepath)
-            logger.info(f"\n{'=' * 60}\nTesting: {filepath}\n{'=' * 60}")
-            adapter.predict_items([item], upload=True)
-        except Exception as e:
-            logger.error(f"Failed on {filepath}: {e}")
-
-    print("Done.")
