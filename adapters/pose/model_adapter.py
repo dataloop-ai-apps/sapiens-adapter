@@ -51,12 +51,13 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
 
     
     def predict(self, batch, **kwargs):
+        import time
+
         mean = np.array([103.53, 116.28, 123.675], dtype=np.float32)
         std = np.array([57.375, 57.12, 58.395], dtype=np.float32)
         input_height = self.model_entity.configuration.get("input_height", 1024)
         input_width = self.model_entity.configuration.get("input_width", 768)
 
-        # From vis_pose.py (COCO format)
         KEYPOINT_NAMES = [
             "nose",
             "left_eye", "right_eye",
@@ -69,6 +70,8 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
             "left_ankle", "right_ankle"
         ]
 
+        TEMPLATE_ID = "b57dc98e-3d94-4c0d-b1a0-6057f06beb0a"
+
         batch_annotations = []
 
         for entry in batch:
@@ -77,12 +80,7 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
             orig_h = entry["orig_h"]
 
             # --- preprocessing ---
-            resized = cv2.resize(
-                image,
-                (input_width, input_height),
-                interpolation=cv2.INTER_LINEAR
-            )
-
+            resized = cv2.resize(image, (input_width, input_height))
             img_float = (resized.astype(np.float32) - mean) / std
 
             tensor = torch.from_numpy(
@@ -96,51 +94,92 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
             if isinstance(output, (list, tuple)):
                 output = output[0]
 
-            # --- pose extraction ---
-            heatmaps = output.squeeze().cpu().numpy()  # [K, H, W]
+            heatmaps = output.squeeze().cpu().numpy()
 
             keypoints_dict = {}
+            hm_h, hm_w = heatmaps.shape[1], heatmaps.shape[2]
 
             for i, name in enumerate(KEYPOINT_NAMES):
                 heatmap = heatmaps[i]
-                logger.info(f"Heatmap shape: {heatmaps.shape}")
 
-                # find max location (same as vis_pose.py idea)
                 y, x = np.unravel_index(np.argmax(heatmap), heatmap.shape)
-
                 confidence = float(heatmap[y, x])
 
-                # optional threshold (important in real usage)
                 if confidence < 0.001:
-                    logger.info(f"{name}: {confidence}")
                     continue
 
-                # scale back to original image
-                x = int(x * orig_w / input_width)
-                y = int(y * orig_h / input_height)
+                # scale to original image
+                x = int(x * orig_w / hm_w)
+                y = int(y * orig_h / hm_h)
 
-                keypoints_dict[name] = {
-                    "x": x,
-                    "y": y,
-                    "confidence": confidence
-                }
 
-            # --- build Dataloop Pose ---
+                # ✅ clamp to image bounds
+                x = max(0, min(orig_w - 1, x))
+                y = max(0, min(orig_h - 1, y))
+
+
+                keypoints_dict[name] = (x, y)
+
+            # --- build annotations ---
             collection = dl.AnnotationCollection()
 
             if len(keypoints_dict) > 0:
+                # ✅ create stable parent id
+                parent_id = str(int(time.time() * 1000000))
+
+                # ✅ parent pose (NO points inside!)
                 collection.add(
                     annotation_definition=dl.Pose(
-                        points=keypoints_dict,
                         label="person",
-                        template_id="b57dc98e-3d94-4c0d-b1a0-6057f06beb0a"
+                        template_id=TEMPLATE_ID
                     ),
+                    object_id=parent_id,
                     model_info={
                         "name": self.model_entity.name,
                         "confidence": 1.0
                     }
                 )
 
+                # ✅ children keypoints
+                for name, (x, y) in keypoints_dict.items():
+                    collection.add(
+                        annotation_definition=dl.Point(
+                            x=x,
+                            y=y,
+                            label=name
+                        ),
+                        parent_id=parent_id
+                    )
+
+            # ✅ debug (optional but useful)
+            logger.info(f"Generated {len(collection.annotations)} annotations")
+
             batch_annotations.append(collection)
 
         return batch_annotations
+
+
+if __name__ == "__main__":
+    dl.setenv('rc')
+    # dl.login()
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s | %(levelname)-7s | %(name)s | %(message)s",
+    )
+
+    project = dl.projects.get(project_name="menachem-onboarding")
+    model = project.models.get(model_name="sapiens-pose-adapter-model-0.3b")
+
+    adapter = SapiensPoseAdapter(model_entity=model)
+
+    dataset = project.datasets.get(dataset_name="new-dataset")
+
+    for filepath in ["/sample-person_2.jpg"]:
+        try:
+            item = dataset.items.get(filepath=filepath)
+            logger.info(f"\n{'=' * 60}\nTesting: {filepath}\n{'=' * 60}")
+            adapter.predict_items([item], upload=True)
+        except Exception as e:
+            logger.error(f"Failed on {filepath}: {e}")
+
+    print("Done.")
