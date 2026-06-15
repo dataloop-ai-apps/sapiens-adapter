@@ -111,7 +111,8 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
                 heatmap = heatmaps[i]
 
                 y, x = np.unravel_index(np.argmax(heatmap), heatmap.shape)
-                confidence = float(heatmap[y, x])
+                confidence_raw = float(heatmap[y, x])
+                confidence = 1.0 / (1.0 + np.exp(-confidence_raw))
 
                 if confidence < 0.001:
                     continue
