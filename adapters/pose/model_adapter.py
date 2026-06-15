@@ -130,7 +130,8 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
                 collection.add(
                     annotation_definition=dl.Pose(
                         points=keypoints_dict,
-                        label="person"
+                        label="person",
+                        template="Pose_1"
                     ),
                     model_info={
                         "name": self.model_entity.name,
