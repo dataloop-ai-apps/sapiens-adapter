@@ -103,6 +103,7 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
 
             for i, name in enumerate(KEYPOINT_NAMES):
                 heatmap = heatmaps[i]
+                logger.info(f"Heatmap shape: {heatmaps.shape}")
 
                 # find max location (same as vis_pose.py idea)
                 y, x = np.unravel_index(np.argmax(heatmap), heatmap.shape)
@@ -110,7 +111,8 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
                 confidence = float(heatmap[y, x])
 
                 # optional threshold (important in real usage)
-                if confidence < 0.1:
+                if confidence < 0.001:
+                    logger.info(f"{name}: {confidence}")
                     continue
 
                 # scale back to original image
