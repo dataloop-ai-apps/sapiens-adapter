@@ -129,6 +129,42 @@
             "left_ankle",
             "right_ankle"
         ]
+      },
+      {
+        "name": "sapiens-pose-adapter-model-1b",
+        "moduleName": "sapiens-pose-adapter-module",
+        "status": "pre-trained",
+        "configuration": {
+          "weights_filename": "sapiens_1b_goliath_best_goliath_AP_639_torchscript.pt2",
+          "input_height": 1024,
+          "input_width": 768,
+          "batch_size": 1
+        },
+        "artifacts": [
+          {
+            "type": "link",
+            "url": "https://huggingface.co/facebook/sapiens-pose-1b-torchscript/resolve/main/sapiens_1b_goliath_best_goliath_AP_639_torchscript.pt2"
+          }
+        ],
+        "labels": [
+            "nose",
+            "left_eye",
+            "right_eye",
+            "left_ear",
+            "right_ear",
+            "left_shoulder",
+            "right_shoulder",
+            "left_elbow",
+            "right_elbow",
+            "left_wrist",
+            "right_wrist",
+            "left_hip",
+            "right_hip",
+            "left_knee",
+            "right_knee",
+            "left_ankle",
+            "right_ankle"
+        ]
       }
     ]
   }

@@ -52,11 +52,6 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
 
     
     def predict(self, batch, **kwargs):
-        import time
-
-        if not batch:
-            return []
-
         mean = np.array([103.53, 116.28, 123.675], dtype=np.float32)
         std = np.array([57.375, 57.12, 58.395], dtype=np.float32)
 
@@ -86,6 +81,7 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
             image = entry["image"]
             orig_w = entry["orig_w"]
             orig_h = entry["orig_h"]
+            item = entry["item"]
 
             # --- preprocessing ---
             resized = cv2.resize(image, (input_width, input_height))
@@ -133,33 +129,22 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
 
                 # ✅ CASE 1: Template exists → Pose + child Points
                 if template_id is not None:
-                    parent_id = str(int(time.time() * 1e6))
 
-                    collection.add(
-                        annotation_definition=dl.Pose(
-                            label=template_name,
-                            template_id=template_id
-                        ),
-                        object_id=parent_id,
-                        model_info={
-                            "name": self.model_entity.name,
-                            "confidence": 1.0
-                        }
-                    )
+                    parent_annotation = item.annotations.upload(
+                        dl.Annotation.new(annotation_definition=dl.Pose(
+                            label='my_parent_label',
+                            template_id=template_id,
+                            instance_id=None  # Optional for tracking specific instances
+                        ))
+                    )[0]
+                    builder = item.annotations.builder()
 
                     for name, (x, y, confidence) in keypoints_dict.items():
-                        collection.add(
-                            annotation_definition=dl.Point(
-                                x=x,
-                                y=y,
-                                label=name
-                            ),
-                            parent_id=parent_id,
-                            model_info={
-                                "name": self.model_entity.name,
-                                "confidence": confidence
-                            }
-                        )
+                        builder.add(annotation_definition=dl.Point(x=x,
+                                                                    y=y,
+                                                                    label=name),
+                                    parent_id=parent_annotation.id)
+                    batch_annotations.append(builder.annotations)
 
                 # ✅ CASE 2: No template → simple Pose(points=...)
                 else:
