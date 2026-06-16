@@ -137,7 +137,7 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
 
                     collection.add(
                         annotation_definition=dl.Pose(
-                            label="person",
+                            label=template_name,
                             template_id=template_id
                         ),
                         object_id=parent_id,
