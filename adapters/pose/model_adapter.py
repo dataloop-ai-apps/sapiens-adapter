@@ -132,7 +132,7 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
 
                     parent_annotation = item.annotations.upload(
                         dl.Annotation.new(annotation_definition=dl.Pose(
-                            label='my_parent_label',
+                            label=template_name,
                             template_id=template_id,
                             instance_id=None  # Optional for tracking specific instances
                         ))
@@ -143,8 +143,12 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
                         builder.add(annotation_definition=dl.Point(x=x,
                                                                     y=y,
                                                                     label=name),
-                                    parent_id=parent_annotation.id)
-                    batch_annotations.append(builder.annotations)
+                                    parent_id=parent_annotation.id,
+                                    model_info={
+                                        "name": self.model_entity.name,
+                                        "confidence": confidence
+                                    })
+                    batch_annotations.append(builder)
 
                 # ✅ CASE 2: No template → simple Pose(points=...)
                 else:
@@ -161,8 +165,7 @@ class SapiensPoseAdapter(dl.BaseModelAdapter):
                             }
                         )
 
-            logger.info(f"Generated {len(collection.annotations)} annotations")
+                    batch_annotations.append(collection)
 
-            batch_annotations.append(collection)
 
         return batch_annotations
