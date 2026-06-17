@@ -88,8 +88,15 @@ class SapiensSegmentationAdapter(dl.BaseModelAdapter):
                 
             if isinstance(output, (list, tuple)):
                 output = output[0]
+            
+            # Convert logits → probabilities
+            probs = torch.softmax(output, dim=1)
+
+            # Get prediction and confidence per pixel
+            conf_map, segmentation = torch.max(probs, dim=1)
 
             segmentation = torch.argmax(output, dim=1).squeeze().cpu().numpy()
+            conf_map = conf_map.squeeze().cpu().numpy()
 
             # Resize segmentation mask back to original item dimensions
             segmentation = cv2.resize(
@@ -98,19 +105,34 @@ class SapiensSegmentationAdapter(dl.BaseModelAdapter):
                 interpolation=cv2.INTER_NEAREST
             )
 
+            conf_map = cv2.resize(
+                conf_map.astype(np.float32),
+                (orig_w, orig_h),
+                interpolation=cv2.INTER_LINEAR
+            )
+
+
             # Build Dataloop annotations
             collection = dl.AnnotationCollection()
             for class_idx, label_name in enumerate(labels):
                 if class_idx == 0:
                     continue  # Skip background
                 
-                mask = (segmentation == class_idx).astype(np.uint8)
-                if mask.sum() == 0:
-                    continue
+                mask = (segmentation == class_idx)
                 
+                if mask.sum() < 100:   # remove tiny noise blobs
+                    continue
+
+                threshold = 0.5
+                valid_mask = mask & (conf_map > threshold)
+                
+                if valid_mask.sum() == 0:
+                    continue
+                confidence = float(conf_map[valid_mask].mean())
+
                 collection.add(
-                    annotation_definition=dl.Segmentation(geo=mask, label=label_name),
-                    model_info={"name": self.model_entity.name, "confidence": 1.0}
+                    annotation_definition=dl.Segmentation(geo=valid_mask, label=label_name),
+                    model_info={"name": self.model_entity.name, "confidence": confidence}
                 )
                 
             batch_annotations.append(collection)
