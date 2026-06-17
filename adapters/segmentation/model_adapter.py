@@ -28,6 +28,10 @@ class SapiensSegmentationAdapter(dl.BaseModelAdapter):
         logger.info(f"Loaded {weights_path} on {self.device}")
 
     def prepare_item_func(self, item: dl.Item):
+        mean = np.array([103.53, 116.28, 123.675], dtype=np.float32)
+        std = np.array([57.375, 57.12, 58.395], dtype=np.float32)
+        input_height = self.model_entity.configuration.get("input_height", 1024)
+        input_width = self.model_entity.configuration.get("input_width", 768)
         # Validate item dimensions
         if not item.width or not item.height:
             raise ValueError(f"Item has invalid dimensions: {item.width}x{item.height}")
@@ -41,17 +45,26 @@ class SapiensSegmentationAdapter(dl.BaseModelAdapter):
 
         if img_bgr is None or img_bgr.size == 0:
             raise ValueError("Invalid image: empty or None")
+
+        resized = cv2.resize(
+                img_bgr, 
+                (input_width, input_height), 
+                interpolation=cv2.INTER_LINEAR
+            )
+
+        img_float = (resized.astype(np.float32) - mean) / std
+        tensor = torch.from_numpy(
+            np.ascontiguousarray(img_float.transpose(2, 0, 1))
+        ).unsqueeze(0).float().to(self.device)
         
         # Return stateless dictionary to safely handle batching
         return {
-            "image": img_bgr,
             "orig_w": item.width,
-            "orig_h": item.height
+            "orig_h": item.height,
+            "tensor": tensor
         }
 
     def predict(self, batch, **kwargs):
-        mean = np.array([103.53, 116.28, 123.675], dtype=np.float32)
-        std = np.array([57.375, 57.12, 58.395], dtype=np.float32)
         input_height = self.model_entity.configuration.get("input_height", 1024)
         input_width = self.model_entity.configuration.get("input_width", 768)
         labels = self.model_entity.labels
@@ -66,25 +79,9 @@ class SapiensSegmentationAdapter(dl.BaseModelAdapter):
             raise ValueError(f"Invalid input dimensions: {input_height}x{input_width}")
 
         for entry in batch:
-            # Validate batch entry
-            if not isinstance(entry, dict) or "image" not in entry:
-                raise ValueError("Invalid batch entry: missing 'image' key")
-            
-            image = entry["image"]
             orig_w = entry["orig_w"]
             orig_h = entry["orig_h"]
-
-            # Resize to model input
-            resized = cv2.resize(
-                image, 
-                (input_width, input_height), 
-                interpolation=cv2.INTER_LINEAR
-            )
-
-            img_float = (resized.astype(np.float32) - mean) / std
-            tensor = torch.from_numpy(
-                np.ascontiguousarray(img_float.transpose(2, 0, 1))
-            ).unsqueeze(0).float().to(self.device)
+            tensor = entry["tensor"]
 
             with torch.no_grad():
                 output = self.model(tensor)
