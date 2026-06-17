@@ -128,6 +128,7 @@ class SapiensSegmentationAdapter(dl.BaseModelAdapter):
                 
                 if valid_mask.sum() == 0:
                     continue
+
                 confidence = float(conf_map[valid_mask].mean())
 
                 collection.add(
