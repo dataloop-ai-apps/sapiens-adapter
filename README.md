@@ -14,8 +14,7 @@ Sapiens models provide strong capabilities for human-centric segmentation tasks:
 
 - **Fine-grained segmentation**: Detailed labels for body parts, clothing, and facial features  
 - **Multiple model sizes**: Choose between performance and accuracy (0.3B / 0.6B / 1B)  
-- **TorchScript support**: Optimized for efficient deployment  
-- **Scalable inference**: Runs on GPU infrastructure within Dataloop  
+- **TorchScript support**: Optimized for efficient deployment
 
 ## Requirements
 
