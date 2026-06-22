@@ -2,11 +2,11 @@
 
 ## Introduction
 
-This repository provides an integration between the Sapiens segmentation models and the [Dataloop](https://dataloop.ai/) platform.
+This repository provides an integration between the Sapiens segmentation models and the [DDOE](https://console.dataloop.ai/) platform.
 
 Sapiens models are high-quality semantic segmentation models designed for detailed human parsing. They provide fine-grained predictions for body parts, clothing, and facial components.
 
-This adapter connects Sapiens models to the Dataloop ecosystem, enabling streamlined inference and deployment workflows for segmentation tasks.
+This adapter connects Sapiens models to the DDOE ecosystem, enabling streamlined inference and deployment workflows for segmentation tasks.
 
 ## Why Sapiens?
 
@@ -22,8 +22,8 @@ Sapiens models provide strong capabilities for human-centric segmentation tasks:
 - torch  
 - torchvision  
 - numpy  
-- An account on the [Dataloop platform](https://console.dataloop.ai/)
+- An account on the [DDOE platform](https://console.dataloop.ai/)
 
 ## Installation
 
-To use this adapter, make sure you have a project and a dataset in your Dataloop account.
+To use this adapter, make sure you have a project and a dataset in your DDOE account.
