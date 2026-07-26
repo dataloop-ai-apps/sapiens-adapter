@@ -71,7 +71,7 @@
         "artifacts": [
           {
             "type": "link",
-            "url": "https://huggingface.co/facebook/sapiens-seg-0.3b-torchscript/resolve/main/sapiens_0.3b_goliath_best_goliath_mIoU_7673_epoch_194_torchscript.pt2"
+            "url": "https://storage.googleapis.com/model-mgmt-snapshots/sapiens/sapiens_0.3b_goliath_best_goliath_mIoU_7673_epoch_194_torchscript.pt2"
           }
         ],
         "labels": [
@@ -118,7 +118,7 @@
         "artifacts": [
           {
             "type": "link",
-            "url": "https://huggingface.co/facebook/sapiens-seg-0.6b-torchscript/resolve/main/sapiens_0.6b_goliath_best_goliath_mIoU_7777_epoch_178_torchscript.pt2"
+            "url": "https://storage.googleapis.com/model-mgmt-snapshots/sapiens/sapiens_0.6b_goliath_best_goliath_mIoU_7777_epoch_178_torchscript.pt2"
           }
         ],
         "labels": [
@@ -165,7 +165,7 @@
         "artifacts": [
           {
             "type": "link",
-            "url": "https://huggingface.co/facebook/sapiens-seg-1b-torchscript/resolve/main/sapiens_1b_goliath_best_goliath_mIoU_7994_epoch_151_torchscript.pt2"
+            "url": "https://storage.googleapis.com/model-mgmt-snapshots/sapiens/sapiens_1b_goliath_best_goliath_mIoU_7994_epoch_151_torchscript.pt2"
           }
         ],
         "labels": [
