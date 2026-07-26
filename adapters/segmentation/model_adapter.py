@@ -140,17 +140,3 @@ class SapiensSegmentationAdapter(dl.BaseModelAdapter):
             batch_annotations.append(collection)
 
         return batch_annotations
-
-dl.setenv('rc')
-project_name = "menachem-onboarding"
-model_name = "sapiens-segmentation-adapter-model-0.6b"
-dataset_name = "new-dataset"
-filepath = "/standing-m-2.jpg"
-
-project = dl.projects.get(project_name=project_name)
-model = project.models.get(model_name=model_name)
-adapter = SapiensSegmentationAdapter(model_entity=model)
-dataset = project.datasets.get(dataset_name=dataset_name)
-item = dataset.items.get(filepath=filepath)
-adapter.predict_items([item])
-item.open_in_web()

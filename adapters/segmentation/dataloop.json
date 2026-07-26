@@ -14,7 +14,7 @@
       {
         "name": "cpu-inference",
         "runtime": {
-          "podType": "regular-m",
+          "podType": "regular-l",
           "concurrency": 1,
           "runnerImage": "gcr.io/viewo-g/piper/agent/runner/apps/sapiens-adapter:0.0.2",
           "autoscaler": {
