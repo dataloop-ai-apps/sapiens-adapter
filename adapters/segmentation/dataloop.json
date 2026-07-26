@@ -1,13 +1,13 @@
 {
   "name": "sapiens-segmentation-adapter",
   "displayName": "Sapiens Segmentation Adapter",
-  "version": "0.0.11",
+  "version": "0.0.14",
   "scope": "public",
   "description": "Sapiens segmentation adapter for DDOE",
   "codebase": {
     "type": "git",
     "gitUrl": "https://github.com/dataloop-ai-apps/sapiens-adapter.git",
-    "gitTag": "0.0.11"
+    "gitTag": "0.0.14"
   },
   "components": {
     "computeConfigs": [
