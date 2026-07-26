@@ -68,12 +68,6 @@
           "input_width": 768,
           "batch_size": 1
         },
-        "artifacts": [
-          {
-            "type": "link",
-            "url": "https://storage.googleapis.com/model-mgmt-snapshots/sapiens/sapiens_0.3b_goliath_best_goliath_mIoU_7673_epoch_194_torchscript.pt2"
-          }
-        ],
         "labels": [
           "background",
           "apparel",
@@ -115,12 +109,6 @@
           "input_width": 768,
           "batch_size": 1
         },
-        "artifacts": [
-          {
-            "type": "link",
-            "url": "https://storage.googleapis.com/model-mgmt-snapshots/sapiens/sapiens_0.6b_goliath_best_goliath_mIoU_7777_epoch_178_torchscript.pt2"
-          }
-        ],
         "labels": [
           "background",
           "apparel",
@@ -162,12 +150,6 @@
           "input_width": 768,
           "batch_size": 1
         },
-        "artifacts": [
-          {
-            "type": "link",
-            "url": "https://storage.googleapis.com/model-mgmt-snapshots/sapiens/sapiens_1b_goliath_best_goliath_mIoU_7994_epoch_151_torchscript.pt2"
-          }
-        ],
         "labels": [
           "background",
           "apparel",

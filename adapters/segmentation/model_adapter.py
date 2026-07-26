@@ -17,10 +17,11 @@ class SapiensSegmentationAdapter(dl.BaseModelAdapter):
         weights_path = os.path.join(local_path, weights_filename)
         
         if not os.path.isfile(weights_path):
-            if os.path.isfile(local_path):
-                weights_path = local_path
+            image_weights = os.path.join('/tmp/app/weights', weights_filename)
+            if os.path.isfile(image_weights):
+                weights_path = image_weights
             else:
-                raise FileNotFoundError(f"No weights found at: {weights_path}")
+                raise FileNotFoundError(f"No weights found at: {weights_path} or {image_weights}")
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = torch.jit.load(weights_path, map_location=self.device)
