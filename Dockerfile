@@ -15,6 +15,6 @@ RUN wget -q -O /tmp/app/weights/sapiens_0.6b_goliath_best_goliath_mIoU_7777_epoc
 RUN wget -q -O /tmp/app/weights/sapiens_1b_goliath_best_goliath_mIoU_7994_epoch_151_torchscript.pt2 \
     https://storage.googleapis.com/model-mgmt-snapshots/sapiens/sapiens_1b_goliath_best_goliath_mIoU_7994_epoch_151_torchscript.pt2
 
-# docker build --no-cache -t gcr.io/viewo-g/piper/agent/runner/apps/sapiens:0.0.1 -f Dockerfile .
-# docker run -it gcr.io/viewo-g/piper/agent/runner/apps/sapiens:0.0.1 bash
-# docker push gcr.io/viewo-g/piper/agent/runner/apps/sapiens:0.0.1
+# docker build --no-cache -t gcr.io/viewo-g/piper/agent/runner/apps/sapiens-adapter:0.0.2 -f Dockerfile .
+# docker run -it gcr.io/viewo-g/piper/agent/runner/apps/sapiens-adapter:0.0.2 bash
+# docker push gcr.io/viewo-g/piper/agent/runner/apps/sapiens-adapter:0.0.2
