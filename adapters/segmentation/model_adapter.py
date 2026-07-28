@@ -26,13 +26,14 @@ class SapiensSegmentationAdapter(dl.BaseModelAdapter):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = torch.jit.load(weights_path, map_location=self.device)
         self.model.eval()
+        self.input_height = self.model_entity.configuration.get("input_height", 1024)
+        self.input_width = self.model_entity.configuration.get("input_width", 768)
+        self.threshold = self.model_entity.configuration.get("threshold", 0.5)
         logger.info(f"Loaded {weights_path} on {self.device}")
 
     def prepare_item_func(self, item: dl.Item):
         mean = np.array([103.53, 116.28, 123.675], dtype=np.float32)
         std = np.array([57.375, 57.12, 58.395], dtype=np.float32)
-        input_height = self.model_entity.configuration.get("input_height", 1024)
-        input_width = self.model_entity.configuration.get("input_width", 768)
         # Validate item dimensions
         if not item.width or not item.height:
             raise ValueError(f"Item has invalid dimensions: {item.width}x{item.height}")
@@ -49,7 +50,7 @@ class SapiensSegmentationAdapter(dl.BaseModelAdapter):
 
         resized = cv2.resize(
                 img_bgr, 
-                (input_width, input_height), 
+                (self.input_width, self.input_height), 
                 interpolation=cv2.INTER_LINEAR
             )
 
@@ -66,8 +67,6 @@ class SapiensSegmentationAdapter(dl.BaseModelAdapter):
         }
 
     def predict(self, batch, **kwargs):
-        input_height = self.model_entity.configuration.get("input_height", 1024)
-        input_width = self.model_entity.configuration.get("input_width", 768)
         labels = self.model_entity.labels
         
         batch_annotations = []
@@ -76,8 +75,8 @@ class SapiensSegmentationAdapter(dl.BaseModelAdapter):
             raise ValueError("Model has no labels configured")
 
         # Validate input dimensions
-        if input_height <= 0 or input_width <= 0:
-            raise ValueError(f"Invalid input dimensions: {input_height}x{input_width}")
+        if self.input_height <= 0 or self.input_width <= 0:
+            raise ValueError(f"Invalid input dimensions: {self.input_height}x{self.input_width}")
 
         for entry in batch:
             orig_w = entry["orig_w"]
@@ -124,8 +123,7 @@ class SapiensSegmentationAdapter(dl.BaseModelAdapter):
                 if mask.sum() < 100:   # remove tiny noise blobs
                     continue
 
-                threshold = 0.5
-                valid_mask = mask & (conf_map > threshold)
+                valid_mask = mask & (conf_map > self.threshold)
                 
                 if valid_mask.sum() == 0:
                     continue
