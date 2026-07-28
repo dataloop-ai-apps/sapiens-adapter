@@ -17,6 +17,6 @@ RUN wget -q -O /tmp/app/weights/sapiens_1b_goliath_best_goliath_mIoU_7994_epoch_
 
 USER 1000
 
-# docker build --no-cache -t gcr.io/viewo-g/piper/agent/runner/apps/sapiens-adapter:0.0.3 -f Dockerfile .
-# docker run -it gcr.io/viewo-g/piper/agent/runner/apps/sapiens-adapter:0.0.3 bash
-# docker push gcr.io/viewo-g/piper/agent/runner/apps/sapiens-adapter:0.0.3
+# docker build --no-cache -t gcr.io/viewo-g/piper/agent/runner/apps/sapiens-adapter:0.0.4 -f Dockerfile .
+# docker run -it gcr.io/viewo-g/piper/agent/runner/apps/sapiens-adapter:0.0.4 bash
+# docker push gcr.io/viewo-g/piper/agent/runner/apps/sapiens-adapter:0.0.4
