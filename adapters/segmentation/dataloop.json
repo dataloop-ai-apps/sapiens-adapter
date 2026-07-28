@@ -1,13 +1,13 @@
 {
   "name": "sapiens-segmentation-adapter",
   "displayName": "Sapiens Segmentation Adapter",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "scope": "public",
   "description": "Sapiens segmentation adapter for DDOE",
   "codebase": {
     "type": "git",
     "gitUrl": "https://github.com/dataloop-ai-apps/sapiens-adapter.git",
-    "gitTag": "0.0.16"
+    "gitTag": "0.0.17"
   },
   "components": {
     "computeConfigs": [
@@ -16,7 +16,7 @@
         "runtime": {
           "podType": "regular-l",
           "concurrency": 1,
-          "runnerImage": "gcr.io/viewo-g/piper/agent/runner/apps/sapiens-adapter:0.0.4",
+          "runnerImage": "gcr.io/viewo-g/piper/agent/runner/apps/sapiens-adapter:0.0.5",
           "autoscaler": {
             "type": "rabbitmq",
             "minReplicas": 0,
