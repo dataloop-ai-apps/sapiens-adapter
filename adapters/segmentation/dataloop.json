@@ -1,6 +1,6 @@
 {
-  "name": "sapiens-segmentation-adapter",
-  "displayName": "Sapiens Segmentation Adapter",
+  "name": "sapiens-segmentation",
+  "displayName": "Sapiens Segmentation",
   "version": "0.0.17",
   "scope": "public",
   "description": "Sapiens segmentation adapter for DDOE",
