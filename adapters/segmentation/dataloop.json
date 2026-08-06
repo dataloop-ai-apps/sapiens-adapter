@@ -107,7 +107,8 @@
           "lower_teeth",
           "upper_teeth",
           "tongue"
-        ]
+        ],
+        "description":"Sapiens segmentation adapter"
       },
       {
         "name": "sapiens-segmentation-adapter-model-0.6b",
@@ -148,7 +149,8 @@
           "lower_teeth",
           "upper_teeth",
           "tongue"
-        ]
+        ],
+        "description": "Sapiens segmentation adapter"
       },
       {
         "name": "sapiens-segmentation-adapter-model-1b",
@@ -189,7 +191,8 @@
           "lower_teeth",
           "upper_teeth",
           "tongue"
-        ]
+        ],
+        "description": "Sapiens segmentation adapter"
       }
     ]
   }
