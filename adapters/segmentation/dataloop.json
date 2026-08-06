@@ -9,6 +9,16 @@
     "gitUrl": "https://github.com/dataloop-ai-apps/sapiens-adapter.git",
     "gitTag": "0.0.17"
   },
+  "attributes": {
+    "Hub": "DDOE",
+    "Provider": "Meta",
+    "Deployed By": "DDOE",
+    "Category": "Model",
+    "Media Type": [
+      "Image"
+    ],
+    "License": "MCC BY-NC 4.0T"
+  },
   "components": {
     "computeConfigs": [
       {
